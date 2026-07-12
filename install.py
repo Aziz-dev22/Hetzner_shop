@@ -71,4 +71,14 @@ def create_database():
     """)
 
     cursor.execute("""
-   
+    CREATE TABLE IF NOT EXISTS hetzner_accounts(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        api_token TEXT NOT NULL,
+        enabled INTEGER DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+    """)
+
+    conn.commit()
+    conn.close()
