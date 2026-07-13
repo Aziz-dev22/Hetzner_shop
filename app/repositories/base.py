@@ -5,59 +5,132 @@ Base Repository
 
 from __future__ import annotations
 
+
 from typing import Generic
-from typing import Type
 from typing import TypeVar
+from typing import Type
+
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-ModelType = TypeVar("ModelType")
 
 
-class BaseRepository(Generic[ModelType]):
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+)
+
+
+from app.infrastructure.database.base import (
+    BaseModel,
+)
+
+
+
+ModelType = TypeVar(
+    "ModelType",
+    bound=BaseModel,
+)
+
+
+
+class BaseRepository(
+    Generic[ModelType]
+):
+
 
     def __init__(
         self,
-        session: AsyncSession,
         model: Type[ModelType],
+        session: AsyncSession,
     ):
-        self.session = session
+
         self.model = model
 
-    async def get(self, obj_id: int):
+        self.session = session
 
-        return await self.session.get(
-            self.model,
-            obj_id,
+
+
+    async def get(
+        self,
+        object_id: int,
+    ) -> ModelType | None:
+
+
+        result = await self.session.execute(
+            select(self.model)
+            .where(
+                self.model.id ==
+                object_id
+            )
         )
 
-    async def get_all(self):
+
+        return (
+            result
+            .scalar_one_or_none()
+        )
+
+
+
+    async def get_all(
+        self,
+    ) -> list[ModelType]:
+
 
         result = await self.session.execute(
             select(self.model)
         )
 
-        return result.scalars().all()
 
-    async def create(self, **kwargs):
+        return list(
+            result.scalars()
+            .all()
+        )
 
-        obj = self.model(**kwargs)
 
-        self.session.add(obj)
+
+    async def create(
+        self,
+        obj: ModelType,
+    ) -> ModelType:
+
+
+        self.session.add(
+            obj
+        )
+
 
         await self.session.flush()
 
+
         return obj
 
-    async def delete(self, obj):
 
-        await self.session.delete(obj)
 
-    async def save(self):
+    async def update(
+        self,
+        obj: ModelType,
+    ) -> ModelType:
 
-        await self.session.commit()
 
-    async def rollback(self):
+        self.session.add(
+            obj
+        )
 
-        await self.session.rollback()
+
+        await self.session.flush()
+
+
+        return obj
+
+
+
+    async def delete(
+        self,
+        obj: ModelType,
+    ):
+
+
+        obj.is_deleted = True
+
+
+        await self.session.flush()
