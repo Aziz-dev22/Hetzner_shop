@@ -1,24 +1,31 @@
 """
 Hetzner Shop
-Wallet Model
+Wallet Database Model
 """
 
 from __future__ import annotations
 
+from decimal import Decimal
+
+from sqlalchemy import String
+from sqlalchemy import Numeric
 from sqlalchemy import Boolean
 from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
-from sqlalchemy import String
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.database.base import BaseModel
+from app.infrastructure.database.base import (
+    BaseModel,
+)
+
 
 
 class Wallet(BaseModel):
 
     __tablename__ = "wallets"
+
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -27,8 +34,8 @@ class Wallet(BaseModel):
         ),
         unique=True,
         nullable=False,
-        index=True,
     )
+
 
     currency: Mapped[str] = mapped_column(
         String(10),
@@ -36,17 +43,16 @@ class Wallet(BaseModel):
         nullable=False,
     )
 
-    balance: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
+
+    balance: Mapped[Decimal] = mapped_column(
+        Numeric(
+            12,
+            2,
+        ),
+        default=Decimal("0.00"),
         nullable=False,
     )
 
-    locked_balance: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
 
     is_active: Mapped[bool] = mapped_column(
         Boolean,
@@ -54,21 +60,14 @@ class Wallet(BaseModel):
         nullable=False,
     )
 
+
     user = relationship(
         "User",
-        lazy="joined",
+        back_populates="wallet",
     )
+
 
     transactions = relationship(
         "WalletTransaction",
         back_populates="wallet",
-        cascade="all, delete-orphan",
     )
-
-    def __repr__(self) -> str:
-        return (
-            f"<Wallet("
-            f"user={self.user_id}, "
-            f"balance={self.balance}"
-            f")>"
-        )
