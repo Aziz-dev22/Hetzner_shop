@@ -1,106 +1,102 @@
 """
 Hetzner Shop
-User Model
+User Database Model
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from datetime import datetime
 
-from sqlalchemy import BigInteger
-from sqlalchemy import Boolean
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey
 from sqlalchemy import String
+from sqlalchemy import Integer
+from sqlalchemy import Boolean
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.database.base import BaseModel
+from app.infrastructure.database.base import (
+    BaseModel,
+)
 
-
-class UserStatus(str, Enum):
-    ACTIVE = "active"
-    INACTIVE = "inactive"
-    BANNED = "banned"
-    DELETED = "deleted"
 
 
 class User(BaseModel):
 
     __tablename__ = "users"
 
+
     telegram_id: Mapped[int] = mapped_column(
-        BigInteger,
+        Integer,
         unique=True,
         nullable=False,
         index=True,
     )
 
+
     username: Mapped[str | None] = mapped_column(
-        String(64),
+        String(100),
         nullable=True,
         index=True,
     )
 
+
     first_name: Mapped[str] = mapped_column(
-        String(128),
+        String(100),
         nullable=False,
     )
 
+
     last_name: Mapped[str | None] = mapped_column(
-        String(128),
+        String(100),
         nullable=True,
     )
+
 
     language_code: Mapped[str] = mapped_column(
         String(10),
-        default="fa",
+        default="en",
         nullable=False,
     )
+
 
     role_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "roles.id",
-            ondelete="RESTRICT",
+            "roles.id"
         ),
         nullable=False,
-        index=True,
     )
 
-    status: Mapped[UserStatus] = mapped_column(
-        SQLEnum(UserStatus),
-        default=UserStatus.ACTIVE,
-        nullable=False,
-        index=True,
-    )
 
-    is_verified: Mapped[bool] = mapped_column(
+    is_active: Mapped[bool] = mapped_column(
         Boolean,
-        default=False,
+        default=True,
         nullable=False,
     )
+
+
+    last_login_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
+        nullable=True,
+    )
+
 
     role = relationship(
         "Role",
         back_populates="users",
     )
 
+
     wallet = relationship(
         "Wallet",
-        uselist=False,
         back_populates="user",
+        uselist=False,
     )
+
 
     orders = relationship(
         "Order",
         back_populates="user",
     )
-
-    def __repr__(self) -> str:
-        return (
-            f"<User("
-            f"id={self.id}, "
-            f"telegram_id={self.telegram_id}"
-            f")>"
-        )
