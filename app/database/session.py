@@ -5,31 +5,56 @@ Database Session Manager
 
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator
 
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.ext.asyncio import async_sessionmaker
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import (
 
-from app.core.config import settings
+    AsyncSession,
+
+    create_async_engine,
+
+    async_sessionmaker,
+
+)
+
+
+from core.config import settings
+
 
 
 engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    future=True,
+
+    settings.DATABASE_URL,
+
+    echo=settings.APP_DEBUG,
+
     pool_pre_ping=True,
+
 )
 
 
-SessionLocal = async_sessionmaker(
+
+AsyncSessionLocal = async_sessionmaker(
+
     bind=engine,
+
     class_=AsyncSession,
-    autoflush=False,
+
     expire_on_commit=False,
+
 )
 
 
-async def get_session() -> AsyncGenerator[AsyncSession, None]:
-    async with SessionLocal() as session:
-        yield session
+
+
+
+async def get_db():
+
+    async with AsyncSessionLocal() as session:
+
+        try:
+
+            yield session
+
+        finally:
+
+            await session.close()
