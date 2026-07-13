@@ -1,43 +1,46 @@
 """
 Hetzner Shop
-Wallet Transaction Model
+Wallet Transaction Database Model
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from decimal import Decimal
 
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
 from sqlalchemy import String
-from sqlalchemy import Text
+from sqlalchemy import Numeric
+from sqlalchemy import ForeignKey
+from sqlalchemy import Enum
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.database.base import BaseModel
+from enum import Enum as PyEnum
+
+from app.infrastructure.database.base import (
+    BaseModel,
+)
 
 
-class TransactionType(str, Enum):
+class TransactionType(str, PyEnum):
+
     DEPOSIT = "deposit"
-    WITHDRAW = "withdraw"
-    PURCHASE = "purchase"
+
+    PAYMENT = "payment"
+
     REFUND = "refund"
+
     BONUS = "bonus"
+
     ADJUSTMENT = "adjustment"
 
-
-class TransactionStatus(str, Enum):
-    PENDING = "pending"
-    COMPLETED = "completed"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
 
 
 class WalletTransaction(BaseModel):
 
     __tablename__ = "wallet_transactions"
+
 
     wallet_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -48,47 +51,23 @@ class WalletTransaction(BaseModel):
         index=True,
     )
 
-    order_id: Mapped[int | None] = mapped_column(
-        ForeignKey(
-            "orders.id",
-            ondelete="SET NULL",
+
+    transaction_type: Mapped[
+        TransactionType
+    ] = mapped_column(
+        Enum(TransactionType),
+        nullable=False,
+    )
+
+
+    amount: Mapped[Decimal] = mapped_column(
+        Numeric(
+            12,
+            2,
         ),
-        nullable=True,
-    )
-
-    payment_id: Mapped[int | None] = mapped_column(
-        ForeignKey(
-            "payments.id",
-            ondelete="SET NULL",
-        ),
-        nullable=True,
-    )
-
-    transaction_type: Mapped[TransactionType] = mapped_column(
-        SQLEnum(TransactionType),
         nullable=False,
     )
 
-    status: Mapped[TransactionStatus] = mapped_column(
-        SQLEnum(TransactionStatus),
-        default=TransactionStatus.PENDING,
-        nullable=False,
-    )
-
-    amount: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-    )
-
-    balance_before: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-    )
-
-    balance_after: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-    )
 
     currency: Mapped[str] = mapped_column(
         String(10),
@@ -96,25 +75,21 @@ class WalletTransaction(BaseModel):
         nullable=False,
     )
 
-    reference: Mapped[str | None] = mapped_column(
-        String(100),
+
+    description: Mapped[str | None] = mapped_column(
+        String(255),
         nullable=True,
     )
 
-    description: Mapped[str | None] = mapped_column(
-        Text,
+
+    reference_id: Mapped[str | None] = mapped_column(
+        String(100),
         nullable=True,
+        index=True,
     )
+
 
     wallet = relationship(
         "Wallet",
         back_populates="transactions",
     )
-
-    order = relationship(
-        "Order",
-    )
-
-    payment = relationship(
-        "Payment",
-  )
