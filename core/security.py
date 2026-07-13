@@ -1,6 +1,6 @@
 """
 Hetzner Shop
-Security Module
+Security Utilities
 """
 
 from __future__ import annotations
@@ -9,14 +9,15 @@ from __future__ import annotations
 from datetime import datetime, timedelta, timezone
 
 
-from passlib.context import CryptContext
-
-
 from jose import jwt
 
 
+from passlib.context import CryptContext
+
 
 from core.config import settings
+
+
 
 
 
@@ -34,59 +35,65 @@ ALGORITHM = "HS256"
 
 
 
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
-
 
 
 def hash_password(
-    password: str,
-) -> str:
+
+    password: str
+
+):
 
 
-    return pwd_context.hash(
-        password
-    )
+    return pwd_context.hash(password)
+
+
 
 
 
 def verify_password(
+
     plain_password: str,
+
     hashed_password: str,
-) -> bool:
+
+):
 
 
     return pwd_context.verify(
 
         plain_password,
 
-        hashed_password,
+        hashed_password
 
     )
 
 
 
+
+
 def create_access_token(
+
     data: dict,
-    expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES,
+
+    expires_minutes: int = 60,
+
 ):
 
 
     payload = data.copy()
 
 
-    expire = (
 
-        datetime.now(
-            timezone.utc
-        )
+    expire = datetime.now(
 
-        +
+        timezone.utc
 
-        timedelta(
-            minutes=expires_minutes
-        )
+    ) + timedelta(
+
+        minutes=expires_minutes
 
     )
+
 
 
     payload.update(
@@ -100,29 +107,51 @@ def create_access_token(
     )
 
 
-    return jwt.encode(
+
+    token = jwt.encode(
 
         payload,
 
         settings.JWT_SECRET_KEY,
 
-        algorithm=ALGORITHM,
+        algorithm=ALGORITHM
 
     )
+
+
+
+    return token
+
+
 
 
 
 def decode_access_token(
-    token: str,
+
+    token: str
+
 ):
 
 
-    return jwt.decode(
+    try:
 
-        token,
 
-        settings.JWT_SECRET_KEY,
+        payload = jwt.decode(
 
-        algorithms=[ALGORITHM],
+            token,
 
-    )
+            settings.JWT_SECRET_KEY,
+
+            algorithms=[ALGORITHM]
+
+        )
+
+
+        return payload
+
+
+
+    except Exception:
+
+
+        return None
