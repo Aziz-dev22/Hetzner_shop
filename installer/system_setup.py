@@ -6,150 +6,81 @@ System Setup Installer
 from __future__ import annotations
 
 
-import platform
-import subprocess
-import shutil
+import os
+
+from pathlib import Path
 
 
 
-REQUIRED_PACKAGES = [
+PROJECT_DIR = Path(
 
-    "git",
+    "/opt/hetzner-shop"
 
-    "curl",
+)
 
-    "python3",
 
-    "python3-pip",
 
-    "python3-venv",
+REQUIRED_DIRS = [
+
+    PROJECT_DIR,
+
+    PROJECT_DIR / "logs",
+
+    PROJECT_DIR / "backup",
+
+    PROJECT_DIR / "data",
 
 ]
 
 
 
-def run_command(
-    command: list[str],
-):
-
-    print(
-        "Running:",
-        " ".join(command)
-    )
+def create_directories():
 
 
-    subprocess.run(
-        command,
-        check=True,
-    )
+    for directory in REQUIRED_DIRS:
 
 
+        directory.mkdir(
 
-def check_os():
+            parents=True,
 
-    system = platform.system()
+            exist_ok=True,
 
-
-    if system != "Linux":
-
-        raise RuntimeError(
-            "Only Linux systems are supported"
         )
 
 
-    print(
-        "Linux detected"
-    )
+
+def set_permissions():
 
 
-
-def check_apt():
-
-    apt = shutil.which(
-        "apt"
-    )
+    for directory in REQUIRED_DIRS:
 
 
-    if not apt:
+        os.chmod(
 
-        raise RuntimeError(
-            "APT package manager not found"
+            directory,
+
+            0o755,
+
         )
-
-
-    print(
-        "APT detected"
-    )
-
-
-
-def update_system():
-
-    run_command(
-
-        [
-
-            "sudo",
-
-            "apt",
-
-            "update",
-
-        ]
-
-    )
-
-
-
-def install_packages():
-
-
-    run_command(
-
-        [
-
-            "sudo",
-
-            "apt",
-
-            "install",
-
-            "-y",
-
-            *REQUIRED_PACKAGES,
-
-        ]
-
-    )
 
 
 
 def setup_system():
 
 
-    print(
-        "Starting system setup..."
-    )
+    create_directories()
 
 
-    check_os()
+    set_permissions()
 
 
-    check_apt()
+    return {
 
+        "status": "completed",
 
-    update_system()
+        "project_path":
 
+        str(PROJECT_DIR),
 
-    install_packages()
-
-
-    print(
-        "System setup completed"
-    )
-
-
-
-if __name__ == "__main__":
-
-    setup_system()
+    }
