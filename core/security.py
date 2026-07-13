@@ -5,153 +5,72 @@ Security Utilities
 
 from __future__ import annotations
 
-
 from datetime import datetime, timedelta, timezone
+from typing import Any
 
-
-from jose import jwt
-
-
+from jose import JWTError, jwt
 from passlib.context import CryptContext
-
 
 from core.config import settings
 
 
-
-
-
 pwd_context = CryptContext(
-
     schemes=["bcrypt"],
-
-    deprecated="auto"
-
+    deprecated="auto",
 )
 
-
-
 ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 
-
-
-
-def hash_password(
-
-    password: str
-
-):
-
-
+def hash_password(password: str) -> str:
+    """Hash a plain text password."""
     return pwd_context.hash(password)
 
 
-
-
-
 def verify_password(
-
     plain_password: str,
-
     hashed_password: str,
-
-):
-
-
+) -> bool:
+    """Verify a password against its hash."""
     return pwd_context.verify(
-
         plain_password,
-
-        hashed_password
-
+        hashed_password,
     )
-
-
-
 
 
 def create_access_token(
-
-    data: dict,
-
-    expires_minutes: int = 60,
-
-):
-
+    data: dict[str, Any],
+    expires_minutes: int = ACCESS_TOKEN_EXPIRE_MINUTES,
+) -> str:
+    """Create a JWT access token."""
 
     payload = data.copy()
 
-
-
-    expire = datetime.now(
-
-        timezone.utc
-
-    ) + timedelta(
-
-        minutes=expires_minutes
-
+    expire = (
+        datetime.now(timezone.utc)
+        + timedelta(minutes=expires_minutes)
     )
 
+    payload["exp"] = expire
 
-
-    payload.update(
-
-        {
-
-            "exp": expire
-
-        }
-
-    )
-
-
-
-    token = jwt.encode(
-
+    return jwt.encode(
         payload,
-
         settings.JWT_SECRET_KEY,
-
-        algorithm=ALGORITHM
-
+        algorithm=ALGORITHM,
     )
-
-
-
-    return token
-
-
-
 
 
 def decode_access_token(
-
-    token: str
-
-):
-
+    token: str,
+) -> dict[str, Any] | None:
+    """Decode and validate a JWT."""
 
     try:
-
-
-        payload = jwt.decode(
-
+        return jwt.decode(
             token,
-
             settings.JWT_SECRET_KEY,
-
-            algorithms=[ALGORITHM]
-
+            algorithms=[ALGORITHM],
         )
-
-
-        return payload
-
-
-
-    except Exception:
-
-
+    except JWTError:
         return None
