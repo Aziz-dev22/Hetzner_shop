@@ -1,21 +1,29 @@
 from __future__ import annotations
 
+
 import asyncio
 
-from logging.config import fileConfig
+
+from logging.config import (
+    fileConfig,
+)
+
 
 from sqlalchemy import pool
+
+
+from sqlalchemy.engine import (
+    Connection,
+)
+
 
 from sqlalchemy.ext.asyncio import (
     async_engine_from_config,
 )
 
+
 from alembic import context
 
-
-from app.core.config import (
-    get_settings,
-)
 
 from app.infrastructure.database.base import (
     Base,
@@ -25,7 +33,14 @@ from app.infrastructure.database.base import (
 from app.database.models import *
 
 
+from app.core.config import (
+    get_settings,
+)
+
+
+
 config = context.config
+
 
 
 if config.config_file_name:
@@ -35,18 +50,27 @@ if config.config_file_name:
     )
 
 
+
 target_metadata = Base.metadata
 
 
 
 def run_migrations_offline():
 
-    settings = get_settings()
+    url = (
+        get_settings()
+        .DATABASE_URL
+    )
+
 
     context.configure(
-        url=settings.DATABASE_URL,
+
+        url=url,
+
         target_metadata=target_metadata,
+
         literal_binds=True,
+
     )
 
 
@@ -56,16 +80,41 @@ def run_migrations_offline():
 
 
 
+
+def do_run_migrations(
+    connection: Connection,
+):
+
+    context.configure(
+
+        connection=connection,
+
+        target_metadata=target_metadata,
+
+    )
+
+
+    with context.begin_transaction():
+
+        context.run_migrations()
+
+
+
+
 async def run_async_migrations():
 
-    connectable = async_engine_from_config(
-        {
-            "sqlalchemy.url":
-                get_settings()
-                .DATABASE_URL
-        },
-        prefix="sqlalchemy.",
-        poolclass=pool.NullPool,
+    connectable = (
+        async_engine_from_config(
+
+            config.get_section(
+                config.config_ini_section
+            ),
+
+            prefix="sqlalchemy.",
+
+            poolclass=pool.NullPool,
+
+        )
     )
 
 
@@ -80,25 +129,13 @@ async def run_async_migrations():
 
 
 
-def do_run_migrations(connection):
-
-    context.configure(
-        connection=connection,
-        target_metadata=target_metadata,
-    )
-
-
-    with context.begin_transaction():
-
-        context.run_migrations()
-
-
 
 def run_migrations_online():
 
     asyncio.run(
         run_async_migrations()
     )
+
 
 
 if context.is_offline_mode():
