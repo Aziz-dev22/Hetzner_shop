@@ -1,6 +1,6 @@
 """
 Hetzner Shop
-Database Base Classes
+Database Base Models
 """
 
 from __future__ import annotations
@@ -9,6 +9,7 @@ from datetime import datetime
 from uuid import uuid4
 
 from sqlalchemy import DateTime
+from sqlalchemy import Integer
 from sqlalchemy import MetaData
 from sqlalchemy import String
 from sqlalchemy.orm import DeclarativeBase
@@ -26,20 +27,32 @@ NAMING_CONVENTION = {
 }
 
 
-metadata = MetaData(
-    naming_convention=NAMING_CONVENTION
-)
-
-
 class Base(DeclarativeBase):
+    metadata = MetaData(
+        naming_convention=NAMING_CONVENTION
+    )
+
+
+class BaseModel(Base):
     """
-    Base class for all database models.
+    Base model for all tables.
     """
 
-    metadata = metadata
+    __abstract__ = True
 
+    id: Mapped[int] = mapped_column(
+        Integer,
+        primary_key=True,
+        autoincrement=True,
+    )
 
-class TimestampMixin:
+    uuid: Mapped[str] = mapped_column(
+        String(36),
+        default=lambda: str(uuid4()),
+        unique=True,
+        nullable=False,
+        index=True,
+    )
 
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
@@ -54,34 +67,15 @@ class TimestampMixin:
         nullable=False,
     )
 
-
-class SoftDeleteMixin:
-
     deleted_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
+        default=None,
     )
 
+    def soft_delete(self) -> None:
+        self.deleted_at = datetime.utcnow()
 
-class UUIDMixin:
-
-    uuid: Mapped[str] = mapped_column(
-        String(36),
-        default=lambda: str(uuid4()),
-        unique=True,
-        index=True,
-        nullable=False,
-    )
-
-
-class BaseModel(
-    Base,
-    UUIDMixin,
-    TimestampMixin,
-    SoftDeleteMixin,
-):
-    """
-    Base model inherited by all tables.
-    """
-
-    __abstract__ = True
+    @property
+    def is_deleted(self) -> bool:
+        return self.deleted_at is not None
