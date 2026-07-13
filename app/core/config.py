@@ -5,7 +5,9 @@ Application Configuration
 
 from __future__ import annotations
 
+
 from functools import lru_cache
+
 
 from pydantic_settings import (
     BaseSettings,
@@ -13,62 +15,72 @@ from pydantic_settings import (
 )
 
 
-class Settings(BaseSettings):
+
+class Settings(
+    BaseSettings
+):
 
 
-    APP_NAME: str = "Hetzner Shop"
+    APP_NAME: str = (
+        "Hetzner Shop"
+    )
 
-    ENVIRONMENT: str = "development"
+
+    ENVIRONMENT: str = (
+        "development"
+    )
+
 
     DEBUG: bool = True
 
 
-    # Database
 
-    DATABASE_URL: str
-
-
-    # Telegram
-
-    TELEGRAM_BOT_TOKEN: str
-
-    TELEGRAM_ADMIN_ID: int
-
-
-    # Security
-
-    SECRET_KEY: str
-
-    ENCRYPTION_KEY: str
-
-
-    # Hetzner
-
-    HETZNER_API_TOKEN: str
-
-
-    # Redis
-
-    REDIS_URL: str = (
-        "redis://localhost:6379/0"
+    DATABASE_URL: str = (
+        "sqlite+aiosqlite:///./shop.db"
     )
 
 
-    # Logging
 
-    LOG_LEVEL: str = "INFO"
+    SECRET_KEY: str = (
+        "change-this-secret"
+    )
+
+
+
+    HETZNER_API_TOKEN: str = (
+        ""
+    )
+
+
+    DEFAULT_PROVIDER: str = (
+        "hetzner"
+    )
+
+
+
+    TELEGRAM_BOT_TOKEN: str = (
+        ""
+    )
+
+
+    ADMIN_ID: int = 0
 
 
 
     model_config = SettingsConfigDict(
+
         env_file=".env",
+
         env_file_encoding="utf-8",
+
         extra="ignore",
+
     )
 
 
 
+
 @lru_cache
-def get_settings() -> Settings:
+def get_settings():
 
     return Settings()
