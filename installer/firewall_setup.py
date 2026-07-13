@@ -1,6 +1,8 @@
 """
 Hetzner Shop
-Firewall Setup
+Firewall Setup Installer
+
+Ubuntu / Debian Compatible
 """
 
 from __future__ import annotations
@@ -10,221 +12,224 @@ import subprocess
 
 
 
-ALLOWED_PORTS = [
+DEFAULT_PORTS = [
 
-    "22/tcp",     # SSH
+    "22/tcp",
 
-    "80/tcp",     # HTTP
+    "80/tcp",
 
-    "443/tcp",    # HTTPS
+    "443/tcp",
+
+    "8000/tcp",
 
 ]
 
 
 
 def run_command(
+
     command: list[str],
+
 ):
 
-    print(
-        "Running:",
-        " ".join(command)
-    )
 
-
-    subprocess.run(
+    result = subprocess.run(
 
         command,
 
-        check=True,
+        stdout=subprocess.PIPE,
+
+        stderr=subprocess.PIPE,
+
+        text=True,
 
     )
+
+
+    return {
+
+        "code": result.returncode,
+
+        "output": result.stdout.strip(),
+
+        "error": result.stderr.strip(),
+
+    }
 
 
 
 def install_ufw():
 
 
-    run_command(
+    check = run_command(
 
         [
 
-            "sudo",
+            "which",
 
-            "apt",
+            "ufw"
+
+        ]
+
+    )
+
+
+    if check["code"] == 0:
+
+        return True
+
+
+
+    result = run_command(
+
+        [
+
+            "apt-get",
+
+            "update"
+
+        ]
+
+    )
+
+
+    if result["code"] != 0:
+
+        return False
+
+
+
+    result = run_command(
+
+        [
+
+            "apt-get",
 
             "install",
 
             "-y",
 
-            "ufw",
+            "ufw"
 
         ]
 
     )
 
 
-
-def reset_firewall():
-
-
-    run_command(
-
-        [
-
-            "sudo",
-
-            "ufw",
-
-            "--force",
-
-            "reset",
-
-        ]
-
-    )
+    return result["code"] == 0
 
 
 
-def set_default_policy():
+def allow_port(
+
+    port: str,
+
+):
 
 
-    run_command(
+    result = run_command(
 
         [
 
-            "sudo",
-
             "ufw",
-
-            "default",
-
-            "deny",
-
-            "incoming",
-
-        ]
-
-    )
-
-
-    run_command(
-
-        [
-
-            "sudo",
-
-            "ufw",
-
-            "default",
 
             "allow",
 
-            "outgoing",
+            port
 
         ]
 
     )
 
 
-
-def allow_ports():
-
-
-    for port in ALLOWED_PORTS:
-
-        run_command(
-
-            [
-
-                "sudo",
-
-                "ufw",
-
-                "allow",
-
-                port,
-
-            ]
-
-        )
+    return result["code"] == 0
 
 
 
 def enable_firewall():
 
 
+    # جلوگیری از قطع SSH
+
     run_command(
 
         [
 
-            "sudo",
+            "ufw",
+
+            "allow",
+
+            "OpenSSH"
+
+        ]
+
+    )
+
+
+    result = run_command(
+
+        [
 
             "ufw",
 
             "--force",
 
-            "enable",
+            "enable"
 
         ]
 
     )
 
 
-
-def show_status():
-
-
-    run_command(
-
-        [
-
-            "sudo",
-
-            "ufw",
-
-            "status",
-
-            "verbose",
-
-        ]
-
-    )
+    return result["code"] == 0
 
 
 
 def setup_firewall():
 
 
-    print(
-        "Starting firewall setup..."
-    )
+    if not install_ufw():
 
+        return {
 
-    install_ufw()
+            "status":
 
+            "failed",
 
-    reset_firewall()
+            "message":
 
+            "UFW installation failed",
 
-    set_default_policy()
-
-
-    allow_ports()
-
-
-    enable_firewall()
-
-
-    show_status()
-
-
-    print(
-        "Firewall configured successfully"
-    )
+        }
 
 
 
-if __name__ == "__main__":
+    allowed = []
 
-    setup_firewall()
+
+
+    for port in DEFAULT_PORTS:
+
+
+        if allow_port(port):
+
+            allowed.append(port)
+
+
+
+    enabled = enable_firewall()
+
+
+
+    return {
+
+        "status":
+
+        "completed" if enabled else "partial",
+
+
+        "allowed_ports":
+
+        allowed,
+
+        }
