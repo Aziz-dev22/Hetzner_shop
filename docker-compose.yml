@@ -1,4 +1,7 @@
-version: "3.9"
+# ==========================================================
+# Hetzner Shop
+# Docker Compose Configuration
+# ==========================================================
 
 
 services:
@@ -6,21 +9,25 @@ services:
 
   app:
 
-    build: .
+    build:
+
+      context: .
+
 
     container_name: hetzner_shop_app
 
+
     restart: always
-
-
-    ports:
-
-      - "8000:8000"
 
 
     env_file:
 
       - .env
+
+
+    ports:
+
+      - "8000:8000"
 
 
     depends_on:
@@ -33,6 +40,7 @@ services:
 
   postgres:
 
+
     image: postgres:16
 
 
@@ -40,6 +48,7 @@ services:
 
 
     restart: always
+
 
 
     environment:
@@ -51,6 +60,7 @@ services:
       POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
 
 
+
     volumes:
 
       - postgres_data:/var/lib/postgresql/data
@@ -58,6 +68,7 @@ services:
 
 
   redis:
+
 
     image: redis:7
 
@@ -68,18 +79,28 @@ services:
     restart: always
 
 
+
     volumes:
 
       - redis_data:/data
 
 
 
+
+
   worker:
 
-    build: .
+
+    build:
+
+      context: .
 
 
     container_name: hetzner_shop_worker
+
+
+    restart: always
+
 
 
     command:
@@ -87,14 +108,16 @@ services:
       celery -A workers.celery_app.celery_app worker --loglevel=info
 
 
-    depends_on:
-
-      - redis
-
 
     env_file:
 
       - .env
+
+
+
+    depends_on:
+
+      - redis
 
 
 
