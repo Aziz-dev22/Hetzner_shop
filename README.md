@@ -1,52 +1,139 @@
 # Hetzner Shop
 
-Professional VPS Management & Sales Platform
-for Hetzner Cloud.
+## پلتفرم حرفه‌ای مدیریت و فروش سرورهای مجازی Hetzner
+
+Hetzner Shop یک سیستم کامل برای مدیریت، فروش و کنترل سرورهای مجازی (VPS) بر پایه Hetzner Cloud است.
+
+این پروژه شامل پنل مدیریت، سیستم کاربران، سفارش، پرداخت، اشتراک، اتصال مستقیم به API هتزنر و پردازش‌های پس‌زمینه می‌باشد.
 
 
+---
 
-## Features
+# امکانات پروژه
 
-- User Management
+✅ مدیریت کاربران
 
-- VPS Ordering System
+✅ سیستم ثبت‌نام و ورود کاربران
 
-- Hetzner Cloud API Integration
+✅ احراز هویت با JWT Token
 
-- Payment Management
+✅ مدیریت سرورهای مجازی VPS
 
-- Subscription Management
+✅ اتصال مستقیم به Hetzner Cloud API
 
-- Admin Dashboard
+✅ ساخت و حذف خودکار سرورها
 
-- Telegram Notifications
+✅ سیستم سفارش خرید VPS
 
-- Background Workers
+✅ مدیریت فاکتور
 
-- Docker Deployment
+✅ مدیریت پرداخت‌ها
+
+✅ مدیریت اشتراک و تمدید سرویس
+
+✅ پنل مدیریت ادمین
+
+✅ ارسال اعلان تلگرام
+
+✅ پردازش‌های پس‌زمینه با Celery
+
+✅ پشتیبانی از Docker
+
+✅ آماده نصب روی سرورهای لینوکسی
 
 
+---
 
-## Requirements
+# تکنولوژی‌های استفاده شده
 
-- Ubuntu 22.04+
+## Backend
+
+- Python 3.12
+
+- FastAPI
+
+- SQLAlchemy
+
+- PostgreSQL
+
+- Redis
+
+- Celery
+
+
+## Security
+
+- JWT Authentication
+
+- Password Hashing با Bcrypt
+
+
+## Deployment
 
 - Docker
 
 - Docker Compose
 
-- Domain (Optional)
+- Uvicorn
 
 
+---
 
-## Installation
+# پیش‌نیازهای نصب
+
+برای اجرای پروژه نیاز دارید:
+
+- Ubuntu 22.04 یا بالاتر
+
+- Docker
+
+- Docker Compose
+
+- دامنه (اختیاری)
 
 
+---
 
-### 1. Clone Project
+# نصب پروژه
+
+
+## مرحله اول: دریافت پروژه
 
 
 ```bash
 git clone https://github.com/your-user/hetzner-shop.git
 
 cd hetzner-shop
+
+مرحله دوم: ساخت فایل تنظیمات
+ابتدا فایل نمونه تنظیمات را کپی کنید:
+cp .env.example .env
+سپس فایل تنظیمات را باز کنید:
+nano .env
+مقادیر مورد نیاز را وارد کنید:
+HETZNER_API_TOKEN=توکن_هتزنر
+
+DATABASE_PASSWORD=رمز_دیتابیس
+
+JWT_SECRET_KEY=کلید_امنیتی
+اجرای پروژه با Docker
+برای اجرای تمام سرویس‌ها:
+docker compose up -d
+پس از اجرا سرویس‌های زیر فعال می‌شوند:
+Hetzner Shop Application
+PostgreSQL Database
+Redis
+Celery Worker
+بررسی وضعیت سرویس‌ها
+docker compose ps
+مشاهده Logها
+برنامه اصلی:
+docker logs hetzner_shop_app
+Worker:
+docker logs hetzner_shop_worker
+اجرای دستی Worker
+در صورت نیاز:
+docker compose restart worker
+آدرس دسترسی
+پس از اجرا:
+http://SERVER_IP:8000
