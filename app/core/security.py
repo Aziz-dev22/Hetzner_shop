@@ -5,68 +5,120 @@ Security Utilities
 
 from __future__ import annotations
 
-import hashlib
-import secrets
 
-from cryptography.fernet import (
-    Fernet,
-)
+from datetime import datetime
+from datetime import timedelta
+
+
+from passlib.context import CryptContext
+
+
+from jose import jwt
+
 
 from app.core.config import (
     get_settings,
 )
 
 
-class SecurityManager:
+
+pwd_context = CryptContext(
+
+    schemes=[
+        "bcrypt"
+    ],
+
+    deprecated="auto",
+
+)
 
 
-    def __init__(self):
 
-        settings = get_settings()
+def hash_password(
+    password: str,
+) -> str:
 
-        self.fernet = Fernet(
-            settings.ENCRYPTION_KEY.encode()
+
+    return pwd_context.hash(
+        password
+    )
+
+
+
+def verify_password(
+    plain_password: str,
+    hashed_password: str,
+) -> bool:
+
+
+    return pwd_context.verify(
+
+        plain_password,
+
+        hashed_password,
+
+    )
+
+
+
+def create_access_token(
+    data: dict,
+    expires_minutes: int = 60,
+):
+
+
+    settings = get_settings()
+
+
+    payload = data.copy()
+
+
+    expire = (
+        datetime.utcnow()
+        +
+        timedelta(
+            minutes=expires_minutes
         )
+    )
 
 
-    def encrypt(
-        self,
-        value: str,
-    ) -> str:
+    payload.update(
 
-        return self.fernet.encrypt(
-            value.encode()
-        ).decode()
+        {
+            "exp": expire
+        }
 
+    )
 
 
-    def decrypt(
-        self,
-        value: str,
-    ) -> str:
+    return jwt.encode(
 
-        return self.fernet.decrypt(
-            value.encode()
-        ).decode()
+        payload,
 
+        settings.SECRET_KEY,
 
+        algorithm="HS256",
 
-    @staticmethod
-    def hash_password(
-        password: str,
-    ) -> str:
-
-        return hashlib.sha256(
-            password.encode()
-        ).hexdigest()
+    )
 
 
 
-    @staticmethod
-    def generate_secret(
-        length: int = 64,
-    ) -> str:
+def decode_access_token(
+    token: str,
+):
 
-        return secrets.token_urlsafe(
-            length
-        )
+
+    settings = get_settings()
+
+
+    return jwt.decode(
+
+        token,
+
+        settings.SECRET_KEY,
+
+        algorithms=[
+            "HS256"
+        ],
+
+    )
