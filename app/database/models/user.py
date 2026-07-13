@@ -9,6 +9,7 @@ from enum import Enum
 
 from sqlalchemy import BigInteger
 from sqlalchemy import Boolean
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy import String
 from sqlalchemy.orm import Mapped
@@ -18,23 +19,14 @@ from sqlalchemy.orm import relationship
 from app.database.base import BaseModel
 
 
-class UserRole(str, Enum):
-    OWNER = "owner"
-    ADMIN = "admin"
-    SUPPORT = "support"
-    USER = "user"
-
-
 class UserStatus(str, Enum):
     ACTIVE = "active"
-    DISABLED = "disabled"
+    INACTIVE = "inactive"
     BANNED = "banned"
+    DELETED = "deleted"
 
 
 class User(BaseModel):
-    """
-    Telegram users.
-    """
 
     __tablename__ = "users"
 
@@ -48,34 +40,37 @@ class User(BaseModel):
     username: Mapped[str | None] = mapped_column(
         String(64),
         nullable=True,
+        index=True,
     )
 
     first_name: Mapped[str] = mapped_column(
-        String(100),
+        String(128),
         nullable=False,
     )
 
     last_name: Mapped[str | None] = mapped_column(
-        String(100),
+        String(128),
         nullable=True,
     )
 
-    language: Mapped[str] = mapped_column(
+    language_code: Mapped[str] = mapped_column(
         String(10),
         default="fa",
         nullable=False,
     )
 
-    role: Mapped[str] = mapped_column(
-        String(20),
-        default=UserRole.USER.value,
+    role_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "roles.id",
+            ondelete="RESTRICT",
+        ),
         nullable=False,
         index=True,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(20),
-        default=UserStatus.ACTIVE.value,
+    status: Mapped[UserStatus] = mapped_column(
+        SQLEnum(UserStatus),
+        default=UserStatus.ACTIVE,
         nullable=False,
         index=True,
     )
@@ -86,59 +81,26 @@ class User(BaseModel):
         nullable=False,
     )
 
-    is_bot_blocked: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
+    role = relationship(
+        "Role",
+        back_populates="users",
     )
 
-    referral_code: Mapped[str | None] = mapped_column(
-        String(32),
-        unique=True,
-        nullable=True,
+    wallet = relationship(
+        "Wallet",
+        uselist=False,
+        back_populates="user",
     )
 
-    invited_by_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-
-    balance: Mapped[int] = mapped_column(
-        default=0,
-        nullable=False,
-    )
-
-    total_spent: Mapped[int] = mapped_column(
-        default=0,
-        nullable=False,
-    )
-
-    total_orders: Mapped[int] = mapped_column(
-        default=0,
-        nullable=False,
-    )
-
-    last_login_ip: Mapped[str | None] = mapped_column(
-        String(45),
-        nullable=True,
-    )
-
-    notes: Mapped[str | None] = mapped_column(
-        String(1000),
-        nullable=True,
-    )
-
-    invited_by = relationship(
-        "User",
-        remote_side="User.id",
-        lazy="joined",
+    orders = relationship(
+        "Order",
+        back_populates="user",
     )
 
     def __repr__(self) -> str:
         return (
             f"<User("
             f"id={self.id}, "
-            f"telegram_id={self.telegram_id}, "
-            f"role='{self.role}'"
+            f"telegram_id={self.telegram_id}"
             f")>"
-  )
+        )
