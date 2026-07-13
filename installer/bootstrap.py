@@ -1,6 +1,6 @@
 """
 Hetzner Shop
-Bootstrap Installer
+Professional Installer Bootstrap
 """
 
 from __future__ import annotations
@@ -8,193 +8,175 @@ from __future__ import annotations
 
 import subprocess
 import sys
-from pathlib import Path
-
-
-from installer.env_setup import (
-    create_env,
-)
 
 
 
-ROOT_DIR = Path(__file__).resolve().parent.parent
+INSTALL_STEPS = [
+
+    (
+        "Preflight Check",
+        "installer.preflight"
+    ),
+
+    (
+        "System Setup",
+        "installer.system_setup"
+    ),
+
+    (
+        "Environment Setup",
+        "installer.env_setup"
+    ),
+
+    (
+        "Requirements Installation",
+        "installer.requirements"
+    ),
+
+    (
+        "Database Setup",
+        "installer.database_setup"
+    ),
+
+    (
+        "Redis Setup",
+        "installer.redis_setup"
+    ),
+
+    (
+        "Queue Setup",
+        "installer.queue_setup"
+    ),
+
+    (
+        "Worker Setup",
+        "installer.worker_setup"
+    ),
+
+    (
+        "Admin User Setup",
+        "installer.user_setup"
+    ),
+
+    (
+        "Nginx Setup",
+        "installer.nginx_setup"
+    ),
+
+    (
+        "SSL Setup",
+        "installer.ssl_setup"
+    ),
+
+    (
+        "Security Setup",
+        "installer.security_setup"
+    ),
+
+    (
+        "Firewall Setup",
+        "installer.firewall_setup"
+    ),
+
+    (
+        "Backup Setup",
+        "installer.backup_setup"
+    ),
+
+    (
+        "Cron Setup",
+        "installer.cron_setup"
+    ),
+
+    (
+        "Monitoring Setup",
+        "installer.monitoring_setup"
+    ),
+
+    (
+        "Health Check",
+        "installer.health_check"
+    ),
+
+    (
+        "Finalize Installation",
+        "installer.finalize_setup"
+    ),
+
+]
 
 
-REQUIREMENTS_FILE = (
-    ROOT_DIR / "requirements.txt"
-)
 
-
-
-def run_command(
-    command: list[str],
+def run_step(
+    name: str,
+    module: str,
 ):
 
     print(
-        "Running:",
-        " ".join(command)
+        "\n" + "=" * 60
+    )
+
+    print(
+        f"Running: {name}"
+    )
+
+    print(
+        "=" * 60
     )
 
 
     subprocess.run(
-        command,
-        cwd=ROOT_DIR,
+
+        [
+
+            sys.executable,
+
+            "-m",
+
+            module,
+
+        ],
+
         check=True,
-    )
-
-
-
-def check_python_version():
-
-    major = sys.version_info.major
-
-    minor = sys.version_info.minor
-
-
-    if major < 3 or (
-        major == 3 and minor < 10
-    ):
-
-        raise RuntimeError(
-            "Python 3.10+ is required"
-        )
-
-
-
-def install_dependencies():
-
-    if not REQUIREMENTS_FILE.exists():
-
-        raise FileNotFoundError(
-            "requirements.txt not found"
-        )
-
-
-    run_command(
-
-        [
-
-            sys.executable,
-
-            "-m",
-
-            "pip",
-
-            "install",
-
-            "--upgrade",
-
-            "pip",
-
-        ]
-
-    )
-
-
-    run_command(
-
-        [
-
-            sys.executable,
-
-            "-m",
-
-            "pip",
-
-            "install",
-
-            "-r",
-
-            "requirements.txt",
-
-        ]
 
     )
 
 
 
-def run_migrations():
+def bootstrap():
 
-    run_command(
-
-        [
-
-            "alembic",
-
-            "upgrade",
-
-            "head",
-
-        ]
-
-    )
-
-
-
-def create_directories():
-
-    directories = [
-
-        "logs",
-
-        "storage",
-
-        "uploads",
-
-    ]
-
-
-    for directory in directories:
-
-        path = ROOT_DIR / directory
-
-
-        path.mkdir(
-            exist_ok=True
-        )
-
-
-
-def start():
 
     print(
         """
-================================
+====================================
 
-   Hetzner Shop Installer
+ Hetzner Shop Installer
 
-================================
+ Starting Installation
+
+====================================
 """
     )
 
 
-    check_python_version()
+    for name, module in INSTALL_STEPS:
 
+        run_step(
 
-    create_env()
+            name,
 
+            module
 
-    create_directories()
-
-
-    install_dependencies()
-
-
-    run_migrations()
-
+        )
 
 
     print(
         """
-================================
+====================================
 
- Installation Completed
+ Installation Completed Successfully
 
- Run:
-
- python -m app.main
-
-================================
+====================================
 """
     )
 
@@ -202,4 +184,4 @@ def start():
 
 if __name__ == "__main__":
 
-    start()
+    bootstrap()
