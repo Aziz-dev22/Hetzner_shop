@@ -33,8 +33,11 @@ def run_command(
 
 
     subprocess.run(
+
         command,
+
         check=True,
+
     )
 
 
@@ -62,7 +65,28 @@ def install_ufw():
 
 
 
-def configure_rules():
+def reset_firewall():
+
+
+    run_command(
+
+        [
+
+            "sudo",
+
+            "ufw",
+
+            "--force",
+
+            "reset",
+
+        ]
+
+    )
+
+
+
+def set_default_policy():
 
 
     run_command(
@@ -76,6 +100,8 @@ def configure_rules():
             "default",
 
             "deny",
+
+            "incoming",
 
         ]
 
@@ -102,8 +128,10 @@ def configure_rules():
 
 
 
-    for port in ALLOWED_PORTS:
+def allow_ports():
 
+
+    for port in ALLOWED_PORTS:
 
         run_command(
 
@@ -144,25 +172,55 @@ def enable_firewall():
 
 
 
+def show_status():
+
+
+    run_command(
+
+        [
+
+            "sudo",
+
+            "ufw",
+
+            "status",
+
+            "verbose",
+
+        ]
+
+    )
+
+
+
 def setup_firewall():
 
 
     print(
-        "Configuring firewall..."
+        "Starting firewall setup..."
     )
 
 
     install_ufw()
 
 
-    configure_rules()
+    reset_firewall()
+
+
+    set_default_policy()
+
+
+    allow_ports()
 
 
     enable_firewall()
 
 
+    show_status()
+
+
     print(
-        "Firewall enabled"
+        "Firewall configured successfully"
     )
 
 
