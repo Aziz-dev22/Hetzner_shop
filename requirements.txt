@@ -1,99 +1,110 @@
 # ==========================================================
 # Hetzner Shop
-# Production Requirements
-# Python >= 3.10
+# Git Ignore Configuration
 # ==========================================================
 
 
-# -------------------------
-# Web Framework
-# -------------------------
-
-fastapi
-uvicorn[standard]
+# Environment Files
+.env
+.env.*
+!.env.example
 
 
-# -------------------------
-# Database
-# -------------------------
 
-sqlalchemy
-asyncpg
-alembic
+# Python Cache
 
+__pycache__/
 
-# -------------------------
-# Configuration
-# -------------------------
+*.py[cod]
 
-python-dotenv
-pydantic
-pydantic-settings
+*$py.class
 
 
-# -------------------------
-# Authentication & Security
-# -------------------------
 
-passlib[bcrypt]
-python-jose[cryptography]
+# Virtual Environment
 
+venv/
 
-# -------------------------
-# HTTP Client
-# -------------------------
+env/
 
-httpx
-requests
+.venv/
 
 
-# -------------------------
-# Background Tasks / Queue
-# -------------------------
 
-redis
-celery
+# IDE
 
+.vscode/
 
-# -------------------------
-# Monitoring
-# -------------------------
+.idea/
 
-psutil
+*.swp
+
+*.swo
 
 
-# -------------------------
-# Telegram Integration
-# -------------------------
 
-python-telegram-bot
+# Logs
 
+logs/
 
-# -------------------------
-# Email
-# -------------------------
-
-aiosmtplib
+*.log
 
 
-# -------------------------
-# Utilities
-# -------------------------
 
-python-multipart
-PyYAML
+# Database Files
 
+*.sqlite
 
-# -------------------------
-# Production Server
-# -------------------------
+*.sqlite3
 
-gunicorn
+*.db
 
 
-# -------------------------
+
 # Testing
-# -------------------------
 
-pytest
-pytest-asyncio
+.pytest_cache/
+
+.coverage
+
+htmlcov/
+
+
+
+# Migrations Cache
+
+alembic/__pycache__/
+
+
+
+# Docker
+
+docker-compose.override.yml
+
+
+
+# OS Files
+
+.DS_Store
+
+Thumbs.db
+
+
+
+# Build Files
+
+build/
+
+dist/
+
+*.egg-info/
+
+
+
+# Temporary Files
+
+*.tmp
+
+*.bak
+
+*.backup
