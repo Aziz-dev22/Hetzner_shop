@@ -1,37 +1,49 @@
 """
 Hetzner Shop
-Order Model
+Order Database Model
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from decimal import Decimal
 
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
+from enum import Enum as PyEnum
+
 from sqlalchemy import String
+from sqlalchemy import Numeric
+from sqlalchemy import ForeignKey
+from sqlalchemy import Enum
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.database.base import BaseModel
+from app.infrastructure.database.base import (
+    BaseModel,
+)
 
 
-class OrderStatus(str, Enum):
+
+class OrderStatus(str, PyEnum):
+
     PENDING = "pending"
-    WAITING_PAYMENT = "waiting_payment"
+
     PAID = "paid"
-    PROCESSING = "processing"
-    COMPLETED = "completed"
-    FAILED = "failed"
+
+    PROVISIONING = "provisioning"
+
+    ACTIVE = "active"
+
+    SUSPENDED = "suspended"
+
     CANCELLED = "cancelled"
-    REFUNDED = "refunded"
+
 
 
 class Order(BaseModel):
 
     __tablename__ = "orders"
+
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -42,19 +54,37 @@ class Order(BaseModel):
         index=True,
     )
 
-    order_number: Mapped[str] = mapped_column(
-        String(32),
-        unique=True,
+
+    product_id: Mapped[int] = mapped_column(
+        ForeignKey(
+            "products.id",
+        ),
         nullable=False,
-        index=True,
     )
 
+
     status: Mapped[OrderStatus] = mapped_column(
-        SQLEnum(OrderStatus),
+        Enum(OrderStatus),
         default=OrderStatus.PENDING,
         nullable=False,
         index=True,
     )
+
+
+    quantity: Mapped[int] = mapped_column(
+        default=1,
+        nullable=False,
+    )
+
+
+    total_amount: Mapped[Decimal] = mapped_column(
+        Numeric(
+            12,
+            2,
+        ),
+        nullable=False,
+    )
+
 
     currency: Mapped[str] = mapped_column(
         String(10),
@@ -62,45 +92,21 @@ class Order(BaseModel):
         nullable=False,
     )
 
-    subtotal_amount: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
-    discount_amount: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
-    tax_amount: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
-    total_amount: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
-    notes: Mapped[str | None] = mapped_column(
-        String(1000),
-        nullable=True,
-    )
 
     user = relationship(
         "User",
-        lazy="joined",
+        back_populates="orders",
     )
 
-    items = relationship(
-        "OrderItem",
+
+    product = relationship(
+        "Product",
+        back_populates="orders",
+    )
+
+
+    server = relationship(
+        "Server",
         back_populates="order",
-        cascade="all, delete-orphan",
+        uselist=False,
     )
-
-    def __repr__(self) -> str:
-        return f"<Order #{self.order_number}>"
