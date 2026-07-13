@@ -1,88 +1,86 @@
 """
 Hetzner Shop
-Application Entry Point
+Main Application Entry
 """
 
 from __future__ import annotations
 
 
-import asyncio
+from contextlib import asynccontextmanager
 
 
-from app.core.logging import (
-    setup_logging,
-)
-
-
-from app.infrastructure.database.session import (
-    SessionFactory,
-)
-
-
-from app.scheduler import (
-    AppScheduler,
-)
+from fastapi import FastAPI
 
 
 
-logger = setup_logging()
+from core.config import settings
 
 
 
-async def startup():
+@asynccontextmanager
+async def lifespan(
+    app: FastAPI,
+):
 
-
-    logger.info(
+    print(
         "Starting Hetzner Shop..."
     )
 
 
-    scheduler = AppScheduler(
-        SessionFactory
+    # Startup tasks:
+    # - Database connection
+    # - Cache connection
+    # - Worker initialization
+
+
+    yield
+
+
+    print(
+        "Stopping Hetzner Shop..."
     )
 
 
-    scheduler.start()
-
-
-    logger.info(
-        "Scheduler started"
-    )
-
-
-    while True:
-
-        await asyncio.sleep(
-            3600
-        )
+    # Shutdown tasks:
+    # - Close connections
+    # - Cleanup resources
 
 
 
-async def shutdown():
+app = FastAPI(
 
+    title=settings.APP_NAME,
 
-    logger.info(
-        "Application stopped"
-    )
+    version="1.0.0",
 
+    lifespan=lifespan,
 
-
-async def main():
-
-
-    try:
-
-        await startup()
-
-
-    except KeyboardInterrupt:
-
-        await shutdown()
+)
 
 
 
-if __name__ == "__main__":
+@app.get("/")
+async def root():
 
-    asyncio.run(
-        main()
-  )
+
+    return {
+
+        "app": settings.APP_NAME,
+
+        "status": "running",
+
+        "version": "1.0.0",
+
+    }
+
+
+
+@app.get("/health")
+async def health():
+
+
+    return {
+
+        "status": "healthy"
+
+    }
