@@ -8,6 +8,7 @@ from __future__ import annotations
 from enum import Enum
 
 from sqlalchemy import Boolean
+from sqlalchemy import Enum as SQLEnum
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
@@ -23,22 +24,20 @@ class ProviderType(str, Enum):
     HETZNER = "hetzner"
 
 
-class ProviderStatus(str, Enum):
+class ProviderAccountStatus(str, Enum):
     ACTIVE = "active"
     DISABLED = "disabled"
+    INVALID_TOKEN = "invalid_token"
     ERROR = "error"
 
 
 class ProviderAccount(BaseModel):
-    """
-    Provider accounts (Hetzner).
-    """
 
     __tablename__ = "provider_accounts"
 
-    provider: Mapped[str] = mapped_column(
-        String(30),
-        default=ProviderType.HETZNER.value,
+    provider: Mapped[ProviderType] = mapped_column(
+        SQLEnum(ProviderType),
+        default=ProviderType.HETZNER,
         nullable=False,
         index=True,
     )
@@ -46,11 +45,17 @@ class ProviderAccount(BaseModel):
     name: Mapped[str] = mapped_column(
         String(100),
         nullable=False,
+        index=True,
     )
 
     api_token: Mapped[str] = mapped_column(
         Text,
         nullable=False,
+    )
+
+    description: Mapped[str | None] = mapped_column(
+        Text,
+        nullable=True,
     )
 
     is_default: Mapped[bool] = mapped_column(
@@ -59,44 +64,33 @@ class ProviderAccount(BaseModel):
         nullable=False,
     )
 
-    status: Mapped[str] = mapped_column(
-        String(20),
-        default=ProviderStatus.ACTIVE.value,
+    status: Mapped[ProviderAccountStatus] = mapped_column(
+        SQLEnum(ProviderAccountStatus),
+        default=ProviderAccountStatus.ACTIVE,
         nullable=False,
+        index=True,
     )
 
-    owner_user_id: Mapped[int | None] = mapped_column(
-        ForeignKey("users.id", ondelete="SET NULL"),
-        nullable=True,
-    )
-
-    project_name: Mapped[str | None] = mapped_column(
-        String(100),
-        nullable=True,
-    )
-
-    account_email: Mapped[str | None] = mapped_column(
-        String(255),
-        nullable=True,
-    )
-
-    server_count: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
+    auto_sync: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
         nullable=False,
     )
 
     last_sync_at: Mapped[str | None] = mapped_column(
-        String(40),
+        String(50),
         nullable=True,
     )
 
-    last_error: Mapped[str | None] = mapped_column(
-        Text,
+    created_by: Mapped[int | None] = mapped_column(
+        ForeignKey(
+            "users.id",
+            ondelete="SET NULL",
+        ),
         nullable=True,
     )
 
-    owner = relationship(
+    creator = relationship(
         "User",
         lazy="joined",
     )
@@ -104,8 +98,7 @@ class ProviderAccount(BaseModel):
     def __repr__(self) -> str:
         return (
             f"<ProviderAccount("
-            f"id={self.id}, "
-            f"name='{self.name}', "
-            f"provider='{self.provider}'"
+            f"{self.provider.value}, "
+            f"{self.name}"
             f")>"
-  )
+        )
