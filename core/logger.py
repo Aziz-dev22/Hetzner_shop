@@ -1,6 +1,6 @@
 """
 Hetzner Shop
-Logging System
+Application Logger
 """
 
 from __future__ import annotations
@@ -12,30 +12,38 @@ from pathlib import Path
 
 
 
-LOG_DIR = Path(
-    "logs"
+LOG_DIR = Path("logs")
+
+
+LOG_DIR.mkdir(
+
+    exist_ok=True
+
 )
+
 
 
 LOG_FILE = LOG_DIR / "app.log"
 
 
 
-def setup_logger():
 
 
-    LOG_DIR.mkdir(
+def get_logger(
 
-        exist_ok=True
+    name: str = "hetzner_shop"
 
-    )
+):
 
 
-    logger = logging.getLogger(
+    logger = logging.getLogger(name)
 
-        "hetzner_shop"
 
-    )
+
+    if logger.handlers:
+
+        return logger
+
 
 
     logger.setLevel(
@@ -45,37 +53,59 @@ def setup_logger():
     )
 
 
-    if not logger.handlers:
+
+    formatter = logging.Formatter(
+
+        "%(asctime)s | "
+
+        "%(levelname)s | "
+
+        "%(name)s | "
+
+        "%(message)s"
+
+    )
 
 
-        file_handler = logging.FileHandler(
 
-            LOG_FILE,
+    file_handler = logging.FileHandler(
 
-            encoding="utf-8",
+        LOG_FILE
 
-        )
-
-
-        formatter = logging.Formatter(
-
-            "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
-
-        )
+    )
 
 
-        file_handler.setFormatter(
+    file_handler.setFormatter(
 
-            formatter
+        formatter
 
-        )
+    )
 
 
-        logger.addHandler(
 
-            file_handler
+    console_handler = logging.StreamHandler()
 
-        )
+
+    console_handler.setFormatter(
+
+        formatter
+
+    )
+
+
+
+    logger.addHandler(
+
+        file_handler
+
+    )
+
+
+    logger.addHandler(
+
+        console_handler
+
+    )
 
 
 
@@ -83,4 +113,6 @@ def setup_logger():
 
 
 
-logger = setup_logger()
+
+
+logger = get_logger()
