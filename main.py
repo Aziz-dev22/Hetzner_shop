@@ -1,28 +1,30 @@
 """
 Hetzner Shop
-Main Application Entry
+Main Application
 """
 
 from __future__ import annotations
 
 
-
 from fastapi import FastAPI
 
 
-
-from api import api_router
-
-
-from web import web_router_group
-
-
-
-from core.logger import logger
-
-
-
 from core.config import settings
+
+
+from api import (
+
+    auth,
+
+    users,
+
+    servers,
+
+    orders,
+
+    admin,
+
+)
 
 
 
@@ -32,64 +34,97 @@ app = FastAPI(
 
     version="1.0.0",
 
-)
-
-
-
-# API Routes
-
-app.include_router(
-
-    api_router
+    description="Hetzner Cloud VPS Management Platform",
 
 )
-
-
-
-# Web Routes
-
-app.include_router(
-
-    web_router_group
-
-)
-
-
-
-@app.on_event("startup")
-async def startup_event():
-
-
-    logger.info(
-
-        "Hetzner Shop started"
-
-    )
-
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-
-
-    logger.info(
-
-        "Hetzner Shop stopped"
-
-    )
 
 
 
 @app.get("/")
-async def root():
 
+async def root():
 
     return {
 
-        "application": settings.APP_NAME,
+        "status": "online",
 
-        "status": "running",
+        "application": settings.APP_NAME,
 
         "version": "1.0.0",
 
     }
+
+
+
+@app.get("/health")
+
+async def health_check():
+
+    return {
+
+        "status": "healthy"
+
+    }
+
+
+
+# API Routers
+
+
+app.include_router(
+
+    auth.router,
+
+    prefix="/api/auth",
+
+    tags=["Authentication"]
+
+)
+
+
+
+app.include_router(
+
+    users.router,
+
+    prefix="/api/users",
+
+    tags=["Users"]
+
+)
+
+
+
+app.include_router(
+
+    servers.router,
+
+    prefix="/api/servers",
+
+    tags=["Servers"]
+
+)
+
+
+
+app.include_router(
+
+    orders.router,
+
+    prefix="/api/orders",
+
+    tags=["Orders"]
+
+)
+
+
+
+app.include_router(
+
+    admin.router,
+
+    prefix="/api/admin",
+
+    tags=["Admin"]
+
+)
