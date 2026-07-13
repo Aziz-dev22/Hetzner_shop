@@ -5,50 +5,117 @@ User Repository
 
 from __future__ import annotations
 
+
 from sqlalchemy import select
 
-from app.database.models.user import User
-from app.repositories.base import BaseRepository
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+)
+
+from app.database.models import (
+    User,
+)
 
 
-class UserRepository(BaseRepository[User]):
 
-    def __init__(self, session):
-        super().__init__(session, User)
+class UserRepository:
+
+
+    def __init__(
+        self,
+        session: AsyncSession,
+    ):
+
+        self.session = session
+
+
+
+    async def get_by_id(
+        self,
+        user_id: int,
+    ) -> User | None:
+
+
+        result = await self.session.execute(
+            select(User)
+            .where(
+                User.id == user_id
+            )
+        )
+
+
+        return (
+            result
+            .scalar_one_or_none()
+        )
+
+
 
     async def get_by_telegram_id(
         self,
         telegram_id: int,
     ) -> User | None:
 
+
         result = await self.session.execute(
-            select(User).where(
-                User.telegram_id == telegram_id
+            select(User)
+            .where(
+                User.telegram_id ==
+                telegram_id
             )
         )
 
-        return result.scalar_one_or_none()
 
-    async def get_by_username(
-        self,
-        username: str,
-    ) -> User | None:
-
-        result = await self.session.execute(
-            select(User).where(
-                User.username == username
-            )
+        return (
+            result
+            .scalar_one_or_none()
         )
 
-        return result.scalar_one_or_none()
 
-    async def exists(
+
+    async def add(
         self,
-        telegram_id: int,
-    ) -> bool:
+        user: User,
+    ) -> User:
 
-        user = await self.get_by_telegram_id(
-            telegram_id
+
+        self.session.add(
+            user
         )
 
-        return user is not None
+
+        await self.session.flush()
+
+
+        return user
+
+
+
+    async def update(
+        self,
+        user: User,
+    ) -> User:
+
+
+        self.session.add(
+            user
+        )
+
+
+        await self.session.flush()
+
+
+        return user
+
+
+
+    async def delete(
+        self,
+        user: User,
+    ):
+
+
+        user.is_deleted = True
+
+
+        await self.session.flush()
