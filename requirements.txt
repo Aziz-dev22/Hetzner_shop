@@ -1,110 +1,110 @@
 # ==========================================================
 # Hetzner Shop
-# Git Ignore Configuration
+# Production Requirements
+# Python 3.12 Compatible
 # ==========================================================
 
 
-# Environment Files
-.env
-.env.*
-!.env.example
+# -------------------------
+# Web Framework
+# -------------------------
+
+fastapi==0.115.6
+
+uvicorn[standard]==0.34.0
 
 
 
-# Python Cache
+# -------------------------
+# Database
+# -------------------------
 
-__pycache__/
+sqlalchemy==2.0.36
 
-*.py[cod]
+asyncpg==0.30.0
 
-*$py.class
-
-
-
-# Virtual Environment
-
-venv/
-
-env/
-
-.venv/
+alembic==1.14.0
 
 
 
-# IDE
+# -------------------------
+# Configuration
+# -------------------------
 
-.vscode/
+pydantic==2.10.4
 
-.idea/
-
-*.swp
-
-*.swo
+pydantic-settings==2.7.0
 
 
 
-# Logs
+# -------------------------
+# Authentication & Security
+# -------------------------
 
-logs/
+python-jose[cryptography]==3.3.0
 
-*.log
+passlib[bcrypt]==1.7.4
 
-
-
-# Database Files
-
-*.sqlite
-
-*.sqlite3
-
-*.db
+bcrypt==4.2.1
 
 
 
+# -------------------------
+# HTTP Client
+# -------------------------
+
+httpx==0.28.1
+
+
+
+# -------------------------
+# Background Worker
+# -------------------------
+
+celery==5.4.0
+
+redis==5.2.1
+
+
+
+# -------------------------
+# Environment
+# -------------------------
+
+python-dotenv==1.0.1
+
+
+
+# -------------------------
+# Form & Upload Support
+# -------------------------
+
+python-multipart==0.0.20
+
+
+
+# -------------------------
+# Email
+# -------------------------
+
+aiosmtplib==3.0.2
+
+
+
+# -------------------------
 # Testing
+# -------------------------
 
-.pytest_cache/
+pytest==8.3.4
 
-.coverage
-
-htmlcov/
-
-
-
-# Migrations Cache
-
-alembic/__pycache__/
+pytest-asyncio==0.25.0
 
 
 
-# Docker
+# -------------------------
+# Code Quality
+# -------------------------
 
-docker-compose.override.yml
+black==24.10.0
 
-
-
-# OS Files
-
-.DS_Store
-
-Thumbs.db
-
-
-
-# Build Files
-
-build/
-
-dist/
-
-*.egg-info/
-
-
-
-# Temporary Files
-
-*.tmp
-
-*.bak
-
-*.backup
+flake8==7.1.1
