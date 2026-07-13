@@ -1,53 +1,69 @@
 """
 Hetzner Shop
-Payment Model
+Payment Database Model
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from decimal import Decimal
 
-from sqlalchemy import Enum as SQLEnum
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
+from enum import Enum as PyEnum
+
 from sqlalchemy import String
-from sqlalchemy import Text
+from sqlalchemy import Numeric
+from sqlalchemy import ForeignKey
+from sqlalchemy import Enum
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.database.base import BaseModel
+from app.infrastructure.database.base import (
+    BaseModel,
+)
 
 
-class PaymentMethod(str, Enum):
+
+class PaymentStatus(str, PyEnum):
+
+    PENDING = "pending"
+
+    PROCESSING = "processing"
+
+    SUCCESS = "success"
+
+    FAILED = "failed"
+
+    CANCELLED = "cancelled"
+
+
+
+class PaymentMethod(str, PyEnum):
+
     WALLET = "wallet"
-    MANUAL = "manual"
-    STRIPE = "stripe"
-    PAYPAL = "paypal"
+
+    CARD = "card"
+
     CRYPTO = "crypto"
 
+    MANUAL = "manual"
 
-class PaymentStatus(str, Enum):
-    PENDING = "pending"
-    PROCESSING = "processing"
-    PAID = "paid"
-    FAILED = "failed"
-    CANCELLED = "cancelled"
-    REFUNDED = "refunded"
 
 
 class Payment(BaseModel):
 
     __tablename__ = "payments"
 
-    order_id: Mapped[int] = mapped_column(
+
+    order_id: Mapped[int | None] = mapped_column(
         ForeignKey(
             "orders.id",
-            ondelete="CASCADE",
+            ondelete="SET NULL",
         ),
-        nullable=False,
+        nullable=True,
         index=True,
     )
+
 
     user_id: Mapped[int] = mapped_column(
         ForeignKey(
@@ -58,22 +74,15 @@ class Payment(BaseModel):
         index=True,
     )
 
-    method: Mapped[PaymentMethod] = mapped_column(
-        SQLEnum(PaymentMethod),
+
+    amount: Mapped[Decimal] = mapped_column(
+        Numeric(
+            12,
+            2,
+        ),
         nullable=False,
     )
 
-    status: Mapped[PaymentStatus] = mapped_column(
-        SQLEnum(PaymentStatus),
-        default=PaymentStatus.PENDING,
-        nullable=False,
-        index=True,
-    )
-
-    amount: Mapped[int] = mapped_column(
-        Integer,
-        nullable=False,
-    )
 
     currency: Mapped[str] = mapped_column(
         String(10),
@@ -81,42 +90,45 @@ class Payment(BaseModel):
         nullable=False,
     )
 
-    gateway_transaction_id: Mapped[str | None] = mapped_column(
-        String(255),
-        nullable=True,
+
+    method: Mapped[PaymentMethod] = mapped_column(
+        Enum(PaymentMethod),
+        nullable=False,
+    )
+
+
+    status: Mapped[PaymentStatus] = mapped_column(
+        Enum(PaymentStatus),
+        default=PaymentStatus.PENDING,
+        nullable=False,
         index=True,
     )
 
-    gateway_reference: Mapped[str | None] = mapped_column(
+
+    gateway: Mapped[str | None] = mapped_column(
+        String(50),
+        nullable=True,
+    )
+
+
+    transaction_id: Mapped[str | None] = mapped_column(
+        String(150),
+        nullable=True,
+        unique=True,
+    )
+
+
+    description: Mapped[str | None] = mapped_column(
         String(255),
         nullable=True,
     )
 
-    gateway_response: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True,
-    )
-
-    description: Mapped[str | None] = mapped_column(
-        Text,
-        nullable=True,
-    )
 
     order = relationship(
         "Order",
-        lazy="joined",
     )
+
 
     user = relationship(
         "User",
-        lazy="joined",
     )
-
-    def __repr__(self) -> str:
-        return (
-            f"<Payment("
-            f"id={self.id}, "
-            f"status={self.status.value}, "
-            f"amount={self.amount}"
-            f")>"
-        )
