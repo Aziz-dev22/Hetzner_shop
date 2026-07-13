@@ -1,163 +1,120 @@
 """
 Hetzner Shop
-Server Model
+Server Database Model
 """
 
 from __future__ import annotations
 
-from enum import Enum
+from datetime import datetime
 
-from sqlalchemy import Boolean
-from sqlalchemy import ForeignKey
-from sqlalchemy import Integer
+from enum import Enum as PyEnum
+
 from sqlalchemy import String
-from sqlalchemy import Text
+from sqlalchemy import Integer
+from sqlalchemy import Boolean
+from sqlalchemy import DateTime
+from sqlalchemy import ForeignKey
+from sqlalchemy import Enum
+
 from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import relationship
 
-from app.database.base import BaseModel
+from app.infrastructure.database.base import (
+    BaseModel,
+)
 
 
-class ServerStatus(str, Enum):
+class ServerStatus(str, PyEnum):
+
     CREATING = "creating"
+
     RUNNING = "running"
+
     STOPPED = "stopped"
-    REBUILDING = "rebuilding"
-    RESCUING = "rescue"
-    DELETING = "deleting"
-    DELETED = "deleted"
+
     ERROR = "error"
+
+    DELETED = "deleted"
+
 
 
 class Server(BaseModel):
-    """
-    Hetzner Cloud Server
-    """
 
     __tablename__ = "servers"
 
-    provider_account_id: Mapped[int] = mapped_column(
+
+    order_id: Mapped[int] = mapped_column(
         ForeignKey(
-            "provider_accounts.id",
+            "orders.id",
             ondelete="CASCADE",
         ),
+        unique=True,
         nullable=False,
-        index=True,
     )
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey(
-            "users.id",
-            ondelete="CASCADE",
-        ),
+
+    provider: Mapped[str] = mapped_column(
+        String(50),
+        default="hetzner",
         nullable=False,
-        index=True,
     )
 
-    hetzner_server_id: Mapped[int] = mapped_column(
+
+    provider_server_id: Mapped[int] = mapped_column(
         Integer,
         nullable=False,
         unique=True,
         index=True,
     )
 
+
     name: Mapped[str] = mapped_column(
-        String(120),
+        String(150),
         nullable=False,
     )
 
-    hostname: Mapped[str | None] = mapped_column(
-        String(255),
-        nullable=True,
-    )
-
-    status: Mapped[str] = mapped_column(
-        String(30),
-        default=ServerStatus.CREATING.value,
-        nullable=False,
-        index=True,
-    )
-
-    server_type: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-    )
-
-    image: Mapped[str] = mapped_column(
-        String(100),
-        nullable=False,
-    )
-
-    location: Mapped[str] = mapped_column(
-        String(50),
-        nullable=False,
-    )
-
-    datacenter: Mapped[str | None] = mapped_column(
-        String(100),
-        nullable=True,
-    )
 
     ipv4: Mapped[str | None] = mapped_column(
         String(45),
         nullable=True,
     )
 
+
     ipv6: Mapped[str | None] = mapped_column(
-        String(64),
+        String(100),
         nullable=True,
     )
 
-    rescue_enabled: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
 
-    backups_enabled: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
-
-    locked: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
-
-    monthly_price: Mapped[int] = mapped_column(
-        Integer,
-        default=0,
-        nullable=False,
-    )
-
-    labels: Mapped[str | None] = mapped_column(
-        Text,
+    location: Mapped[str | None] = mapped_column(
+        String(100),
         nullable=True,
     )
 
-    notes: Mapped[str | None] = mapped_column(
-        Text,
+
+    status: Mapped[ServerStatus] = mapped_column(
+        Enum(ServerStatus),
+        default=ServerStatus.CREATING,
+        nullable=False,
+        index=True,
+    )
+
+
+    expires_at: Mapped[datetime | None] = mapped_column(
+        DateTime,
         nullable=True,
     )
 
-    provider_account = relationship(
-        "ProviderAccount",
-        lazy="joined",
+
+    auto_renew: Mapped[bool] = mapped_column(
+        Boolean,
+        default=True,
+        nullable=False,
     )
 
-    user = relationship(
-        "User",
-        lazy="joined",
-    )
 
-    def __repr__(self) -> str:
-        return (
-            f"<Server("
-            f"id={self.id}, "
-            f"hetzner_id={self.hetzner_server_id}, "
-            f"name='{self.name}'"
-            f")>"
-  )
+    order = relationship(
+        "Order",
+        back_populates="server",
+    )
